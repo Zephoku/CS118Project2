@@ -11,6 +11,7 @@ Sm 	= sequence max
 Rn = 0;
 while(connection not closed):
 	If connection quits: 
+	
 	If packet received = Rn, 
 		Accept packet, store
 		Send ACK request for Rn
@@ -23,3 +24,14 @@ while(connection not closed):
 //////////////////////////////////
 // Sender
 //////////////////////////////////
+
+Sb = 0;
+Sm = N - 1
+while(connection not closed):
+	If connection quits:
+
+	If ACK > Sb
+		Sm = Sm + Rn - Sb
+		Sb = Rn
+	If no packets are currently being transmitted
+		Transmit a packet Sn where Sb <= Sn <= Sm
