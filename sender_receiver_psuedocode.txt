@@ -1,0 +1,25 @@
+N 	= window size
+Rn 	= request number
+Sn 	= sequence number
+Sb	= sequence base
+Sm 	= sequence max
+
+//////////////////////////////////
+// Receiver
+//////////////////////////////////
+
+Rn = 0;
+while(connection not closed):
+	If connection quits: 
+	If packet received = Rn, 
+		Accept packet, store
+		Send ACK request for Rn
+		Rn = Rn + 1
+	Else if the packet received isn't Rn,
+		Refuse the packet
+		Send ACK request for Rn
+
+
+//////////////////////////////////
+// Sender
+//////////////////////////////////
