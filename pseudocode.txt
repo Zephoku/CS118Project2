@@ -1,0 +1,97 @@
+//////////////////////////////////
+// Receiver
+//////////////////////////////////
+
+N 	= window size
+Rn 	= request number
+Sn 	= sequence number
+Sb	= sequence base
+Sm 	= sequence max
+
+Pseudocode: 
+	Rn = 0;
+	while(connection not closed):
+		If connection quits (guess timeout for a long time), quit too 
+		If packet received = Rn, 
+			Accept packet, store
+			Send ACK request for Rn
+			Rn = Rn + 1
+		Else if the packet received isn't Rn,
+			Refuse the packet
+			Send ACK request for Rn
+
+
+//////////////////////////////////
+// Sender
+//////////////////////////////////
+
+Sb refers to indexes in a vector
+
+Pseudocode: 
+	Sb = 0;
+	Sm = N - 1
+	Highest_returned_ack = -1;
+	while(connection not closed):
+		If connection quits (guess timeout for a long time), quit too
+		If ACK received and it's higher than Highest_returned_ack
+			Highest_returned_ack = ACK number
+		If ACK > Sb
+			Sm = Sm + Rn - Sb
+			Sb = Rn
+		Else If no packets are currently being transmitted
+			Transmit a packet Sn where Sb <= Sn <= Sm
+		Else if timeout period is reached
+			Resend packet with number = Highest_returned_ack
+
+
+//////////////////////////////////
+// Disassembling
+//////////////////////////////////
+
+NOTE: We can use something like fread right?
+TODO: Determine page size.
+
+	Something like this:
+		FILE *fd = fopen(read, "r");
+			length = ftell (fd);
+			if (fd){
+				char chunk[BSIZE];
+				long int size;
+				while(size = fread(chunk, 1, BSIZE, fd) ) {
+					write(sock, chunk, size);
+				}
+				if(ferror(fd)) { 
+				return 404;
+			    	}
+			}
+
+Pseudocode:
+
+	index = 0;
+	Find file length
+	Open file
+		Try to read file
+		While we can read file, place what we read into vector
+		index++;
+
+
+//////////////////////////////////
+// Creating Packets
+//////////////////////////////////
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
