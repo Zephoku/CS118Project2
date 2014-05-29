@@ -12,12 +12,15 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <queue>
+#include <time.h>
 
 #include "Window.h"
 
 #define MYPORT "4951"    // the port users will be connecting to
 
 #define MAXBUFLEN 100
+#define SLIDINGWINDOWSIZE 5
 
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
@@ -74,6 +77,9 @@ int main(void)
 
     freeaddrinfo(servinfo);
 
+    // Used to get timestamps
+    time_t timer;
+
     while(1) {
       printf("listener: waiting to recvfrom...\n");
 
@@ -87,13 +93,37 @@ int main(void)
       Window window;
       window.disassemble(buf);
 
+      // ChangeThis: Implement window (queue) to send the files
+      queue<Packet> sliding_window;
+      int window_position = 0;
+
       int packetsLeft = window.packets.size();
       int i = 0;
+      // Loop while there are still files to be sent
       while (packetsLeft != 0) {
-        sendto(sockfd, window.packets[i], sizeof(Packet), 0,
+
+        // TODO: Pop queue when ACK for first one is received
+        if () {
+          sliding_window.pop();
+          window_position++;
+        }
+
+        // While time queue has less than 5 elements in it
+        while (sliding_window.size() < SLIDINGWINDOWSIZE) {
+          // Set the timer
+          window.packets[i]->header.setTimeStamp(time(&timer));
+
+          sliding_window.push(window.packets[i]);
+
+          sendto(sockfd, window.packets[i], sizeof(Packet), 0,
             (struct sockaddr *)&their_addr, addr_len);
-        packetsLeft--;
-        i++;
+
+          packetsLeft--;
+          
+          i++;
+        }
+
+        
         printf("Packet Sent\n");
       }
 
