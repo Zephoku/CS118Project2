@@ -1,14 +1,14 @@
 CC=g++
 CFLAGS=-c -Wall
 LDFLAGS=
-SOURCES= main.cpp
-OBJECTS=$(SOURCES:.cpp=.o)
-EXECUTABLE=main.out
 
-all: $(SOURCES) $(EXECUTABLE)
+all: server client
 	
-$(EXECUTABLE): $(OBJECTS) 
-	$(CC) $(LDFLAGS) $(OBJECTS) -o $@
+server: 
+	$(CC) $(LDFLAGS) server.cpp -o server
 
-.cpp.o:
-	$(CC) $(CFLAGS) $< -o $@
+client:
+	$(CC) $(LDFLAGS) client.cpp -o client
+
+clean: 
+	rm server client
