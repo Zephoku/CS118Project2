@@ -22,11 +22,11 @@ int Window::disassemble(string filename) {
 
   file = fopen(filename.c_str(), "rb");
 
-  if (file == NULL) 
+  if (file == NULL) {
     return -1;
+  }
 
   packet = new Packet();
-  packet->header.setSeqNum(curSeqNum);
 
   while( ! feof(file)) {
     buf = fgetc(file);
@@ -38,6 +38,7 @@ int Window::disassemble(string filename) {
     if (packetSize >= bufSize) {
       time_t timer;
       time(&timer);
+      packet->header.setSeqNum(curSeqNum * 1024 + packetSize);
       packet->header.setContentLength(packetSize);
       packet->header.setTimestamp(timer);
       this->packets.push_back(packet);
@@ -45,6 +46,7 @@ int Window::disassemble(string filename) {
       // Reset packet
       packet = new Packet();
       packetSize = 0;
+      curSeqNum++;
     }
   }
 
@@ -52,12 +54,10 @@ int Window::disassemble(string filename) {
   if (packetSize > 0) {
     time_t timer;
     time(&timer);
+    packet->header.setSeqNum(curSeqNum * 1024 + packetSize);
     packet->header.setContentLength(packetSize);
     packet->header.setTimestamp(timer);
     this->packets.push_back(packet);
-
-    packet = new Packet();
-    packetSize = 0;
   }
 
   fclose (file);
