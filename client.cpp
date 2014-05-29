@@ -15,7 +15,7 @@
 
 #include "Window.h"
 
-#define SERVERPORT "4950"    // the port users will be connecting to
+#define SERVERPORT "4951"    // the port users will be connecting to
 
 int main(int argc, char *argv[])
 {
@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
     int numbytes;
 
     if (argc != 3) {
-        fprintf(stderr,"usage: talker hostname message\n");
+        fprintf(stderr,"usage: talker hostname filename\n");
         exit(1);
     }
 
@@ -59,6 +59,21 @@ int main(int argc, char *argv[])
         perror("talker: sendto");
         exit(1);
     }
+
+    Window window;
+    while(1) {
+      printf("Waiting to recieve\n");
+      Packet *packet = new Packet();
+      printf("Size of packet: %d\n", sizeof(Packet));
+      recvfrom(sockfd, packet, sizeof(Packet), 0 , NULL, 0);
+      if (packet->header.getFin() == 1) {
+        break;
+      }
+      window.packets.push_back(packet);
+      printf("Recieved Packet\n");
+    }
+
+    window.assemble(argv[2]);
 
     freeaddrinfo(servinfo);
 

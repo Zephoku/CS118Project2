@@ -1,71 +1,87 @@
 #include "Window.h"
 #include <stdio.h>
-#include <stdio.h>
+#include <time.h>
 
 Window::Window() {
   timer = 1;
 }
 
-vector<Packet*> Window::disassemble(FILE* file) {
+Window::~Window() {
+  for (int i = 0; i < this->packets.size(); i++)
+    delete this->packets[i];
+}
+
+// Disassembles Filename and saves in packets
+// Returns 0 on success, 1 on error
+int Window::disassemble(string filename) {
   const int bufSize = 1024;
-  Packet *packet;
-  char buf;
   int curSeqNum = 0, packetSize = 0;
+  char buf;
+  FILE *file;
+  Packet *packet;
+
+  file = fopen(filename.c_str(), "rb");
 
   if (file == NULL) 
-    perror ("Error opening file");
-  else {
-    packet = new Packet();
-    packet->header.setSeqNum(curSeqNum);
+    return -1;
 
-    while( ! feof(file)) {
-      buf = fgetc(file);
+  packet = new Packet();
+  packet->header.setSeqNum(curSeqNum);
 
-      packet->data.data.push_back(buf);
-      packetSize++;
+  while( ! feof(file)) {
+    buf = fgetc(file);
 
-      // Create new packet
-      if (packetSize >= bufSize) {
-        packet->header.setContentLength(packetSize);
-        // TODO: Set timestamp
-        this->packets.push_back(packet);
+    packet->data[packetSize] = buf;
+    packetSize++;
 
-        // Reset packet
-        packet = new Packet();
-        packetSize = 0;
-      }
-    }
-
-    // Create leftover packet
-    if (packetSize > 0) {
+    // Create new packet
+    if (packetSize >= bufSize) {
+      time_t timer;
+      time(&timer);
       packet->header.setContentLength(packetSize);
-      // TODO: Set timestamp
+      packet->header.setTimestamp(timer);
       this->packets.push_back(packet);
 
+      // Reset packet
       packet = new Packet();
       packetSize = 0;
     }
-
-    fclose (file);
   }
-  return this->packets;
-}
 
-FILE* Window::assemble() {
-  FILE* file;
-  file = fopen ("testout.txt", "wb");
+  // Create leftover packet
+  if (packetSize > 0) {
+    time_t timer;
+    time(&timer);
+    packet->header.setContentLength(packetSize);
+    packet->header.setTimestamp(timer);
+    this->packets.push_back(packet);
 
-  for(int j = 0; j < this->packets.size(); j++) {
-    fwrite(&(this->packets[j]->data.data[0]), sizeof(char), this->packets[j]->data.data.size(), file);
+    packet = new Packet();
+    packetSize = 0;
   }
 
   fclose (file);
+  return 0;
 }
 
-FILE Window::getFILE() {
-  return this->file;
+// Assembles packets and saves as filename
+// Returns 0 on success, 1 on error
+int Window::assemble(string filename) {
+  FILE* file;
+  file = fopen (filename.c_str(), "wb");
+
+  if(file == NULL)
+    return -1;
+
+  for(int j = 0; j < this->packets.size(); j++) {
+    fwrite( &(this->packets[j]->data[0]), 
+        sizeof(char), 
+        this->packets[j]->header.getContentLength(),
+        file );
+  }
+
+  fclose (file);
+
+  return 0;
 }
 
-void Window::setFILE(FILE file) {
-  this->file = file;
-}

@@ -1,24 +1,21 @@
 #include "Header.h"
-#include "Data.h"
 #include <vector>
 #include <cstdio>
+#include <string>
 
 using namespace std;
 
 struct Packet {
   Header header;
-  Data data;
+  char data[1024];
 };
 
 class Window {
   public:
     Window();
+    ~Window();
     vector<Packet*> packets;
-    vector<Packet*> disassemble(FILE *file);
-    FILE* assemble();
+    int disassemble(string filename);
+    int assemble(string filename);
     int timer;
-    FILE getFILE();
-    void setFILE(FILE file);
-  private: 
-    FILE file;
 };
