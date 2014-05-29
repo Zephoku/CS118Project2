@@ -34,6 +34,7 @@ void *get_in_addr(struct sockaddr *sa)
 
 int main(void)
 {
+
     int sockfd;
     struct addrinfo hints, *servinfo, *p;
     int rv;
@@ -49,30 +50,30 @@ int main(void)
     hints.ai_flags = AI_PASSIVE; // use my IP
 
     if ((rv = getaddrinfo(NULL, MYPORT, &hints, &servinfo)) != 0) {
-        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
-        return 1;
+      fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+      return 1;
     }
 
     // loop through all the results and bind to the first we can
     for(p = servinfo; p != NULL; p = p->ai_next) {
-        if ((sockfd = socket(p->ai_family, p->ai_socktype,
-                p->ai_protocol)) == -1) {
-            perror("listener: socket");
-            continue;
-        }
+      if ((sockfd = socket(p->ai_family, p->ai_socktype,
+              p->ai_protocol)) == -1) {
+        perror("listener: socket");
+        continue;
+      }
 
-        if (bind(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
-            close(sockfd);
-            perror("listener: bind");
-            continue;
-        }
+      if (bind(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
+        close(sockfd);
+        perror("listener: bind");
+        continue;
+      }
 
-        break;
+      break;
     }
 
     if (p == NULL) {
-        fprintf(stderr, "listener: failed to bind socket\n");
-        return 2;
+      fprintf(stderr, "listener: failed to bind socket\n");
+      return 2;
     }
 
     freeaddrinfo(servinfo);
@@ -83,6 +84,8 @@ int main(void)
     while(1) {
       printf("listener: waiting to recvfrom...\n");
 
+      memset(buf, 0, MAXBUFLEN);
+
       addr_len = sizeof their_addr;
       if ((numbytes = recvfrom(sockfd, buf, MAXBUFLEN-1 , 0,
               (struct sockaddr *)&their_addr, &addr_len)) == -1) {
@@ -91,7 +94,10 @@ int main(void)
       }
 
       Window window;
-      window.disassemble(buf);
+      int status = window.disassemble(buf);
+      if (status < 0) {
+        printf("Error requesting file %s.  Please try again.\n", buf);
+      }
 
       // ChangeThis: Implement window (queue) to send the files
       queue<Packet> sliding_window;
@@ -142,6 +148,7 @@ int main(void)
 
     }
     close(sockfd);
+
 
     return 0;
 }
