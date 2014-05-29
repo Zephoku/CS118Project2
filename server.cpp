@@ -40,6 +40,12 @@ int main(void)
     socklen_t addr_len;
     char s[INET6_ADDRSTRLEN];
 
+    FILE *file;
+    file = fopen("test.txt", "rb");
+    Window window;
+    window.disassemble(file);
+    window.assemble();
+
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC; // set to AF_INET to force IPv4
     hints.ai_socktype = SOCK_DGRAM;

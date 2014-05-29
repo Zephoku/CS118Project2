@@ -14,9 +14,9 @@ class Window {
   public:
     Window();
     vector<Packet*> packets;
-    vector<Packet*> disassemble(FILE file);
-    vector<Packet*> assemble();
-    const int timer;
+    vector<Packet*> disassemble(FILE *file);
+    FILE* assemble();
+    int timer;
     FILE getFILE();
     void setFILE(FILE file);
   private: 
