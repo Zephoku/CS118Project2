@@ -17,12 +17,11 @@
 
 #define SERVERPORT "4951"    // the port users will be connecting to
 
-void sendACK(int ack_num, int sockfd) {
+void sendACK(int ack_num, int sockfd, struct addrinfo *p) {
     Packet *ack_packet = new Packet();
-    ack_packet->setAckNum(ack_num);
+    ack_packet->header.setAckNum(ack_num);
 
-    // sendto(sockfd, ack_packet, sizeof(ack_packet), 0,
-        // (struct sockaddr *)&their_addr, addr_len);
+    sendto(sockfd, ack_packet, sizeof(ack_packet), 0, p->ai_addr, p->ai_addrlen);
 
 }
 
@@ -72,9 +71,9 @@ int main(int argc, char *argv[])
     Window window;
     int num_received = 0;
     while(1) {
-        printf("Waiting to recieve\n");
+        //printf("Waiting to recieve\n");
         Packet *packet = new Packet();
-        printf("Size of packet: %d\n", sizeof(Packet));
+        //printf("Size of packet: %d\n", sizeof(Packet));
         recvfrom(sockfd, packet, sizeof(Packet), 0 , NULL, 0);
         if (packet->header.getFin() == 1) {
             break;
@@ -83,23 +82,30 @@ int main(int argc, char *argv[])
         // If in order, push back into window
         if (num_received == 0) {
             window.packets.push_back(packet);
+            sendACK(packet->header.getSeqNum(), sockfd, p);
             printf("Received First Packet.\n");
             num_received++;
+        }
         else {
             // Get sizes
-            int prev_size = window.packets.back()->header.getSeqNum();
+            int prev_seq_num = window.packets.back()->header.getSeqNum();
             int curr_packet_seq_num = packet->header.getSeqNum();
             int curr_packet_size = packet->header.getContentLength();
 
-            if (curr_packet_seq_num - prev_size = curr_packet_size) {
+            if (curr_packet_seq_num - prev_seq_num == curr_packet_size) {
                 // Packets in order
                 window.packets.push_back(packet);
                 printf("Received Packet in Order\n");
+                printf("Packet number is: %d\n", curr_packet_seq_num);
+                sendACK(packet->header.getSeqNum(), sockfd, p);
                 num_received++;
             } else {
                 // Else, drop the packet
                 printf("Received Packet out of order. Dropped");
-                // TODO: Resend ACK
+               // TODO: Resend ACK - DONE
+                // sendACK of last previously received packet (in order)
+                sendACK(prev_seq_num, sockfd, p);
+                
             }
         }
     }

@@ -100,24 +100,23 @@ int main(void)
       }
 
       // ChangeThis: Implement window (queue) to send the files
-      queue<Packet> sliding_window;
+      queue<Packet*> sliding_window;
       int window_position = 0;
 
       int packetsLeft = window.packets.size();
-      int i = 0;
+      int i;
+      
       // Loop while there are still files to be sent
       while (packetsLeft != 0) {
 
-        // TODO: Pop queue when ACK for first one is received
-        if () {
-          sliding_window.pop();
-          window_position++;
-        }
 
-        // While time queue has less than 5 elements in it
+        //printf("Queue has %d items \n", sliding_window.size());
+        // While the queue has less than 5 elements in it
         while (sliding_window.size() < SLIDINGWINDOWSIZE) {
+
+          //printf("Entered loop for the %d'th time\n", i);
           // Set the timer
-          window.packets[i]->header.setTimeStamp(time(&timer));
+          window.packets[i]->header.setTimestamp(time(&timer));
 
           sliding_window.push(window.packets[i]);
 
@@ -125,12 +124,21 @@ int main(void)
             (struct sockaddr *)&their_addr, addr_len);
 
           packetsLeft--;
-          
           i++;
+          
         }
 
+        Packet *ack_packet = new Packet();
+        recvfrom(sockfd, ack_packet, sizeof(Packet), 0 , NULL, 0); //code wont move on unless client recieved something. expecting an ack
+
+        //pop queue for all ack numbers received in order
+
+        while ( (ack_packet->header.getAckNum()) >= (sliding_window.front()->header.getSeqNum())) {
+              printf("Ack number is: %d\n", ack_packet->header.getAckNum());
+              sliding_window.pop();
+              window_position++; //new slot has opened up in the window
+        }
         
-        printf("Packet Sent\n");
       }
 
       Packet *fin = new Packet();
