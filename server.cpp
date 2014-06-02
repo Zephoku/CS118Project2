@@ -133,12 +133,35 @@ int main(void)
 
         //pop queue for all ack numbers received in order
 
-        while ( (ack_packet->header.getAckNum()) >= (sliding_window.front()->header.getSeqNum())) {
+        int diff = ((ack_packet->header.getAckNum() - sliding_window.front()->header.getSeqNum()) / 1024);
+
+        while (diff >= 0) {
+
               printf("Ack number is: %d\n", ack_packet->header.getAckNum());
               sliding_window.pop();
               window_position++; //new slot has opened up in the window
+              diff--; //we need to pop the queue "diff" many times for multiple packet acks
         }
         
+      }
+
+      /*Get remaining acks after termination of while loop. Code is a re-write : bad, might be able to clean up */
+
+      while(!sliding_window.empty())
+      {
+        Packet *ack_packet = new Packet();
+        recvfrom(sockfd, ack_packet, sizeof(Packet), 0 , NULL, 0);
+
+        int diff = (ack_packet->header.getAckNum() - sliding_window.front()->header.getSeqNum()) / 1024;
+
+        while (diff >= 0) {
+
+              printf("Ack number is: %d\n", ack_packet->header.getAckNum());
+              sliding_window.pop();
+              window_position++; //new slot has opened up in the window
+              diff--; //we need to pop the queue "diff" many times for multiple packet acks
+        }
+
       }
 
       Packet *fin = new Packet();
