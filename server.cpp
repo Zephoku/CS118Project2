@@ -37,12 +37,14 @@ int main(void)
 
     int sockfd;
     struct addrinfo hints, *servinfo, *p;
-    int rv;
+    int rv; int rv_timer;
     int numbytes;
     struct sockaddr_storage their_addr;
     char buf[MAXBUFLEN];
     socklen_t addr_len;
     char s[INET6_ADDRSTRLEN];
+    fd_set readfds;
+    struct timeval tv;
 
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC; // set to AF_INET to force IPv4
@@ -128,6 +130,55 @@ int main(void)
           
         }
 
+        FD_ZERO(&readfds);
+        FD_SET(sockfd, &readfds);
+
+        tv.tv_sec = 1;
+        tv.tv_usec = 0;
+        rv_timer = select(sockfd + 1, &readfds, NULL, NULL, &tv);
+
+        if (rv_timer == -1) 
+        {
+            perror("select"); // error occurred in select()
+        } 
+        else if (rv_timer == 0) 
+        {
+            printf("Timeout occurred!  No data after 1 seconds.\n");
+
+            while(!sliding_window.empty())
+            {
+              sliding_window.pop();
+            }
+
+            i = window_position;
+        }
+        else 
+        {
+             // one or both of the descriptors have data
+          if (FD_ISSET(sockfd, &readfds)) 
+          {
+
+            Packet *ack_packet = new Packet();
+            recvfrom(sockfd, ack_packet, sizeof(Packet), 0 , NULL, 0); //code wont move on unless client recieved something. expecting an ack
+
+            //pop queue for all ack numbers received in order
+
+            int diff = ((ack_packet->header.getAckNum() - sliding_window.front()->header.getSeqNum()) / 1024);
+
+            while (diff >= 0) 
+            {
+
+              printf("Ack number is: %d\n", ack_packet->header.getAckNum());
+              sliding_window.pop();
+              window_position++; //new slot has opened up in the window
+              diff--; //we need to pop the queue "diff" many times for multiple packet acks
+            }
+            
+          }
+
+        }
+
+/*
         Packet *ack_packet = new Packet();
         recvfrom(sockfd, ack_packet, sizeof(Packet), 0 , NULL, 0); //code wont move on unless client recieved something. expecting an ack
 
@@ -141,7 +192,7 @@ int main(void)
               sliding_window.pop();
               window_position++; //new slot has opened up in the window
               diff--; //we need to pop the queue "diff" many times for multiple packet acks
-        }
+        }*/
         
       }
 

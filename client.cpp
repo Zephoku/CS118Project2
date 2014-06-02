@@ -70,6 +70,11 @@ int main(int argc, char *argv[])
 
     Window window;
     int num_received = 0;
+
+    // REMOVEME
+    bool asdf = false;
+
+
     while(1) {
         //printf("Waiting to recieve\n");
         Packet *packet = new Packet();
@@ -93,6 +98,14 @@ int main(int argc, char *argv[])
             int curr_packet_size = packet->header.getContentLength();
 
             if (curr_packet_seq_num - prev_seq_num == curr_packet_size) {
+
+                if (curr_packet_seq_num == 5120 && !asdf) {
+                    // drop a bitch
+                    printf("Dropped packet (simulated)");
+                    asdf = true;
+                    continue;
+                }
+
                 // Packets in order
                 window.packets.push_back(packet);
                 printf("Received Packet in Order\n");
@@ -101,7 +114,7 @@ int main(int argc, char *argv[])
                 num_received++;
             } else {
                 // Else, drop the packet
-                printf("Received Packet out of order. Dropped");
+                printf("Received Packet out of order. Dropped. \n"); //Packet Loss, might have to fix this. 
                // TODO: Resend ACK - DONE
                 // sendACK of last previously received packet (in order)
                 sendACK(prev_seq_num, sockfd, p);
