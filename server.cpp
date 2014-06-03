@@ -34,6 +34,19 @@ void *get_in_addr(struct sockaddr *sa)
     return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
+bool simulatePacketLoss(int prob)
+{
+    int random_number = rand() % 100 + 1; //random number between 1 - 10;
+
+    return (random_number <= prob);
+}
+
+bool simulatePacketCorruption(int prob) {
+    int random_number = rand() % 100 + 1; //random number between 1 - 10;
+
+    return (random_number <= prob);
+}
+
 int main(void)
 {
 
@@ -179,6 +192,23 @@ int main(void)
 
             Packet *ack_packet = new Packet();
             recvfrom(sockfd, ack_packet, sizeof(Packet), 0 , NULL, 0); //code wont move on unless client recieved something. expecting an ack
+
+            // Simulate Packet Loss
+            if (simulatePacketLoss(0)) {
+                printf("Dropped ACK (simulated). \n");
+                continue;
+            }
+
+            // Simulate Packet Corruption
+            if (simulatePacketCorruption(0)) {
+                printf("ACK corrupted (simulated). \n");
+                // Send the ACK of the last received packet.
+                // sendACK(0, sockfd, p);
+
+                // If ACK is corrupted...
+
+                continue;
+            }
 
             //pop queue for all ack numbers received in order
             int diff = ((ack_packet->header.getAckNum() - sliding_window.front()->header.getSeqNum()) / 1024);
