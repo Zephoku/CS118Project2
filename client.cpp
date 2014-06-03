@@ -12,17 +12,25 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <time.h>
 
 #include "Window.h"
 
 #define SERVERPORT "4951"    // the port users will be connecting to
+#define PROBABILITY 1 // 0.1 probability
 
 void sendACK(int ack_num, int sockfd, struct addrinfo *p) {
     Packet *ack_packet = new Packet();
     ack_packet->header.setAckNum(ack_num);
 
     sendto(sockfd, ack_packet, sizeof(ack_packet), 0, p->ai_addr, p->ai_addrlen);
+}
 
+bool simulatePacketLoss()
+{
+    int prob = rand() % 10 + 1; //numbers between 1 - 10;
+
+    return (prob <= PROBABILITY);
 }
 
 int main(int argc, char *argv[])
@@ -31,6 +39,8 @@ int main(int argc, char *argv[])
     struct addrinfo hints, *servinfo, *p;
     int rv;
     int numbytes;
+
+    srand (time(NULL));
 
     if (argc != 3) {
         fprintf(stderr,"usage: talker hostname filename\n");
@@ -99,7 +109,7 @@ int main(int argc, char *argv[])
 
             if (curr_packet_seq_num - prev_seq_num == curr_packet_size) {
 
-                if (curr_packet_seq_num == 5120 && !asdf) {
+                if (simulatePacketLoss && !asdf) {
                     // drop a bitch
                     printf("Dropped packet (simulated)");
                     asdf = true;

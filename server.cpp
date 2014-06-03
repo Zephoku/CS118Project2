@@ -14,6 +14,7 @@
 #include <netdb.h>
 #include <queue>
 #include <time.h>
+#include <cmath>
 
 #include "Window.h"
 
@@ -21,6 +22,7 @@
 
 #define MAXBUFLEN 100
 #define SLIDINGWINDOWSIZE 5
+#define EXPIRY 1
 
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
@@ -106,10 +108,11 @@ int main(void)
       int window_position = 0;
 
       int packetsLeft = window.packets.size();
-      int i;
+      int i = 0;
       
       // Loop while there are still files to be sent
-      while (packetsLeft != 0) {
+      //while (packetsLeft != 0) {
+      while(1) {
 
         //printf("Queue has %d items \n", sliding_window.size());
         // While the queue has less than 5 elements in it
@@ -133,9 +136,20 @@ int main(void)
         FD_ZERO(&readfds);
         FD_SET(sockfd, &readfds);
 
-        tv.tv_sec = 1;
-        tv.tv_usec = 0;
-        rv_timer = select(sockfd + 1, &readfds, NULL, NULL, &tv);
+        double diff = difftime( (time(&timer)), sliding_window.front()->header.getTimestamp() ); 
+        double timediff = 0;
+
+        if(timediff < EXPIRY)
+        {
+            timediff = EXPIRY - timediff;
+            tv.tv_sec = (int) floor(timediff);
+            tv.tv_usec =  (int) ((timediff - floor(timediff)) * 1000000);
+            rv_timer = select(sockfd + 1, &readfds, NULL, NULL, &tv);
+        }
+        else //been more than EXPIRY second's so expired
+        {
+            rv_timer = 0;
+        }
 
         if (rv_timer == -1) 
         {
@@ -143,7 +157,7 @@ int main(void)
         } 
         else if (rv_timer == 0) 
         {
-            printf("Timeout occurred!  No data after 1 seconds.\n");
+            printf("Timeout occurred!  No data after %f seconds.\n", timediff);
 
             while(!sliding_window.empty())
             {
@@ -152,6 +166,19 @@ int main(void)
             }
 
             i = window_position;
+
+            while (packetsLeft!= 0)
+            {
+               window.packets[i]->header.setTimestamp(time(&timer));
+
+              sliding_window.push(window.packets[i]);
+
+              sendto(sockfd, window.packets[i], sizeof(Packet), 0,
+              (struct sockaddr *)&their_addr, addr_len);
+
+              packetsLeft--;
+              i++;
+            }
         }
         else 
         {
@@ -180,42 +207,11 @@ int main(void)
 
         }
 
-/*
-        Packet *ack_packet = new Packet();
-        recvfrom(sockfd, ack_packet, sizeof(Packet), 0 , NULL, 0); //code wont move on unless client recieved something. expecting an ack
-
-        //pop queue for all ack numbers received in order
-
-        int diff = ((ack_packet->header.getAckNum() - sliding_window.front()->header.getSeqNum()) / 1024);
-
-        while (diff >= 0) {
-
-              printf("Ack number is: %d\n", ack_packet->header.getAckNum());
-              sliding_window.pop();
-              window_position++; //new slot has opened up in the window
-              diff--; //we need to pop the queue "diff" many times for multiple packet acks
-        }*/
-        
-      }
-
-      /*Get remaining acks after termination of while loop. Code is a re-write : bad, might be able to clean up */
-
-      while(!sliding_window.empty())
-      {
-        Packet *ack_packet = new Packet();
-        recvfrom(sockfd, ack_packet, sizeof(Packet), 0 , NULL, 0);
-
-        int diff = (ack_packet->header.getAckNum() - sliding_window.front()->header.getSeqNum()) / 1024;
-
-        while (diff >= 0) {
-
-              printf("Ack number is: %d\n", ack_packet->header.getAckNum());
-              //printf("dog");
-              sliding_window.pop();
-              window_position++; //new slot has opened up in the window
-              diff--; //we need to pop the queue "diff" many times for multiple packet acks
+        if(sliding_window.empty())
+        {
+          break;
         }
-
+        
       }
 
       Packet *fin = new Packet();
