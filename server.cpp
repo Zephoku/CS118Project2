@@ -111,15 +111,10 @@ int main(void)
       // Loop while there are still files to be sent
       while (packetsLeft != 0) {
 
-        printf("a");
-
-
         //printf("Queue has %d items \n", sliding_window.size());
         // While the queue has less than 5 elements in it
 
-        while (sliding_window.size() < SLIDINGWINDOWSIZE) {
-
-          printf("b");
+        while ((packetsLeft!= 0) && (sliding_window.size() < SLIDINGWINDOWSIZE)) {
 
           //printf("Entered loop for the %d'th time\n", i);
           // Set the timer
@@ -132,7 +127,6 @@ int main(void)
 
           packetsLeft--;
           i++;
-          printf("c");
           
         }
 
@@ -154,6 +148,7 @@ int main(void)
             while(!sliding_window.empty())
             {
               sliding_window.pop();
+              packetsLeft++; //HAHA DAVID: we missed this!
             }
 
             i = window_position;
@@ -175,11 +170,8 @@ int main(void)
             {
 
               printf("Ack number is: %d\n", ack_packet->header.getAckNum());
-              // ROBERT: The code gets a sementation fault between the above line and this. "dog" doesn't print
-              printf("dog");
-              printf("%d", sliding_window.size());
+              // ROBERT: The code gets a sementation fault between the above line and this. "dog" doesn't
               sliding_window.pop();
-              printf("d");
               window_position++; //new slot has opened up in the window
               diff--; //we need to pop the queue "diff" many times for multiple packet acks
             }
@@ -218,6 +210,7 @@ int main(void)
         while (diff >= 0) {
 
               printf("Ack number is: %d\n", ack_packet->header.getAckNum());
+              //printf("dog");
               sliding_window.pop();
               window_position++; //new slot has opened up in the window
               diff--; //we need to pop the queue "diff" many times for multiple packet acks
