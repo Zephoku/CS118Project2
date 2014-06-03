@@ -103,7 +103,6 @@ int main(void)
         printf("Error requesting file %s.  Please try again.\n", buf);
       }
 
-      // ChangeThis: Implement window (queue) to send the files
       queue<Packet*> sliding_window;
       int window_position = 0;
 
@@ -136,39 +135,33 @@ int main(void)
         FD_ZERO(&readfds);
         FD_SET(sockfd, &readfds);
 
+        // Check for a timeout
         double diff = difftime( (time(&timer)), sliding_window.front()->header.getTimestamp() ); 
         double timediff = 0;
 
-        if(timediff < EXPIRY)
-        {
+        if(timediff < EXPIRY) {
             timediff = EXPIRY - timediff;
             tv.tv_sec = (int) floor(timediff);
             tv.tv_usec =  (int) ((timediff - floor(timediff)) * 1000000);
             rv_timer = select(sockfd + 1, &readfds, NULL, NULL, &tv);
-        }
-        else //been more than EXPIRY second's so expired
-        {
+        } else { 
+            //been more than EXPIRY second's so expired
             rv_timer = 0;
         }
 
-        if (rv_timer == -1) 
-        {
+        if (rv_timer == -1) {
             perror("select"); // error occurred in select()
-        } 
-        else if (rv_timer == 0) 
-        {
+        } else if (rv_timer == 0) {
             printf("Timeout occurred!  No data after %f seconds.\n", timediff);
 
-            while(!sliding_window.empty())
-            {
+            while(!sliding_window.empty()) {
               sliding_window.pop();
               packetsLeft++; //HAHA DAVID: we missed this!
             }
 
             i = window_position;
 
-            while (packetsLeft!= 0)
-            {
+            while (packetsLeft!= 0) {
                window.packets[i]->header.setTimestamp(time(&timer));
 
               sliding_window.push(window.packets[i]);
@@ -180,22 +173,17 @@ int main(void)
               i++;
             }
         }
-        else 
-        {
+        else {
              // one or both of the descriptors have data
-          if (FD_ISSET(sockfd, &readfds)) 
-          {
+          if (FD_ISSET(sockfd, &readfds)) {
 
             Packet *ack_packet = new Packet();
             recvfrom(sockfd, ack_packet, sizeof(Packet), 0 , NULL, 0); //code wont move on unless client recieved something. expecting an ack
 
             //pop queue for all ack numbers received in order
-
             int diff = ((ack_packet->header.getAckNum() - sliding_window.front()->header.getSeqNum()) / 1024);
 
-            while (diff >= 0) 
-            {
-
+            while (diff >= 0) {
               printf("Ack number is: %d\n", ack_packet->header.getAckNum());
               // ROBERT: The code gets a sementation fault between the above line and this. "dog" doesn't
               sliding_window.pop();
@@ -207,11 +195,9 @@ int main(void)
 
         }
 
-        if(sliding_window.empty())
-        {
+        if(sliding_window.empty()) {
           break;
-        }
-        
+        } 
       }
 
       Packet *fin = new Packet();

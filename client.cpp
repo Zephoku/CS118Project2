@@ -17,7 +17,7 @@
 #include "Window.h"
 
 #define SERVERPORT "4951"    // the port users will be connecting to
-#define PROBABILITY 1 // 0.1 probability
+// #define PROBABILITY 1 // 0.1 probability
 
 void sendACK(int ack_num, int sockfd, struct addrinfo *p) {
     Packet *ack_packet = new Packet();
@@ -26,11 +26,17 @@ void sendACK(int ack_num, int sockfd, struct addrinfo *p) {
     sendto(sockfd, ack_packet, sizeof(ack_packet), 0, p->ai_addr, p->ai_addrlen);
 }
 
-bool simulatePacketLoss()
+bool simulatePacketLoss(int prob)
 {
-    int prob = rand() % 10 + 1; //numbers between 1 - 10;
+    int random_number = rand() % 100 + 1; //random number between 1 - 10;
 
-    return (prob <= PROBABILITY);
+    return (random_number <= prob);
+}
+
+bool simulatePacketCorruption(int prob) {
+    int random_number = rand() % 100 + 1; //random number between 1 - 10;
+
+    return (random_number <= prob);
 }
 
 int main(int argc, char *argv[])
@@ -63,7 +69,6 @@ int main(int argc, char *argv[])
             perror("talker: socket");
             continue;
         }
-
         break;
     }
 
@@ -81,10 +86,6 @@ int main(int argc, char *argv[])
     Window window;
     int num_received = 0;
 
-    // REMOVEME
-    bool asdf = false;
-
-
     while(1) {
         //printf("Waiting to recieve\n");
         Packet *packet = new Packet();
@@ -96,12 +97,28 @@ int main(int argc, char *argv[])
         // Check to see if packet is received in order
         // If in order, push back into window
         if (num_received == 0) {
+
+            // Simulate Packet Loss
+            if (simulatePacketLoss(10)) {
+                printf("Dropped packet (simulated). \n");
+                continue;
+            }
+
+            // Simulate Packet Corruption
+            if (simulatePacketCorruption(10)) {
+                printf("Packet corrupted (simulated). \n");
+                // Send the ACK of the last received packet.
+                sendACK(0, sockfd, p);
+                continue;
+            }
+
+
             window.packets.push_back(packet);
             sendACK(packet->header.getSeqNum(), sockfd, p);
             printf("Received First Packet.\n");
             num_received++;
-        }
-        else {
+
+        } else {
             // Get sizes
             int prev_seq_num = window.packets.back()->header.getSeqNum();
             int curr_packet_seq_num = packet->header.getSeqNum();
@@ -109,10 +126,18 @@ int main(int argc, char *argv[])
 
             if (curr_packet_seq_num - prev_seq_num == curr_packet_size) {
 
-                if (simulatePacketLoss && !asdf) {
-                    // drop a bitch
-                    printf("Dropped packet (simulated)");
-                    asdf = true;
+                // Simulate Packet Loss
+                if (simulatePacketLoss(10)) {
+                    printf("Dropped packet (simulated). \n");
+                    continue;
+                }
+
+                // Simulate Packet Corruption
+                if (simulatePacketCorruption(10)) {
+                    printf("Packet corrupted (simulated). \n");
+
+                    // Send the ACK of the last received packet.
+                    sendACK(prev_seq_num, sockfd, p);
                     continue;
                 }
 
@@ -125,10 +150,8 @@ int main(int argc, char *argv[])
             } else {
                 // Else, drop the packet
                 printf("Received Packet out of order. Dropped. \n"); //Packet Loss, might have to fix this. 
-               // TODO: Resend ACK - DONE
-                // sendACK of last previously received packet (in order)
+                // send ACK of last previously received packet (in order)
                 sendACK(prev_seq_num, sockfd, p);
-                
             }
         }
     }
