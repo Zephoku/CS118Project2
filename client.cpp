@@ -127,13 +127,13 @@ int main(int argc, char *argv[])
 
             // Simulate Packet Loss
             if (simulatePacketLoss(0)) {
-                printf("Dropped packet (simulated). \n");
+                printf("Dropped packet: %d (simulated). \n", packet->header.getSeqNum());
                 continue;
             }
 
             // Simulate Packet Corruption
             if (simulatePacketCorruption(0)) {
-                printf("Packet corrupted (simulated). \n");
+                printf("Packet corrupted: %d (simulated). \n", packet->header.getSeqNum());
                 
                 // Send the ACK of the last received packet.
                 last_ack_number = 0;
