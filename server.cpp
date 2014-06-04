@@ -114,6 +114,7 @@ int main(void)
       int status = window.disassemble(buf);
       if (status < 0) {
         printf("Error requesting file %s.  Please try again.\n", buf);
+        continue;
       }
 
       queue<Packet*> sliding_window;
@@ -194,14 +195,14 @@ int main(void)
             recvfrom(sockfd, ack_packet, sizeof(Packet), 0 , NULL, 0); //code wont move on unless client recieved something. expecting an ack
 
             // Simulate Packet Loss
-            if (simulatePacketLoss(50)) {
-                printf("Dropped ACK (simulated). \n");
+            if (simulatePacketLoss(40)) {
+                printf("Dropped ACK: %d (simulated). \n", ack_packet->header.getAckNum());
                 continue;
             }
 
             // Simulate Packet Corruption
             if (simulatePacketCorruption(0)) {
-                printf("ACK corrupted (simulated). \n");
+                printf("ACK corrupted: %d (simulated). \n", ack_packet->header.getAckNum());
                 // Send the ACK of the last received packet.
                 // sendACK(0, sockfd, p);
 
