@@ -194,14 +194,14 @@ int main(void)
             recvfrom(sockfd, ack_packet, sizeof(Packet), 0 , NULL, 0); //code wont move on unless client recieved something. expecting an ack
 
             // Simulate Packet Loss
-            if (simulatePacketLoss(50)) {
-                printf("Dropped ACK (simulated). \n");
+            if (simulatePacketLoss(30)) {
+                printf("Dropped ACK: %d (simulated). \n", ack_packet->header.getAckNum());
                 continue;
             }
 
             // Simulate Packet Corruption
             if (simulatePacketCorruption(0)) {
-                printf("ACK corrupted (simulated). \n");
+                printf("ACK corrupted: %d (simulated). \n", ack_packet->header.getAckNum());
                 // Send the ACK of the last received packet.
                 // sendACK(0, sockfd, p);
 
@@ -235,6 +235,8 @@ int main(void)
       fin->header.setFin(1);
       sendto(sockfd, fin, sizeof(Packet), 0,
           (struct sockaddr *)&their_addr, addr_len);
+
+      printf("Sent fin to client\n");
 
       printf("listener: got packet from %s\n",
           inet_ntop(their_addr.ss_family,
