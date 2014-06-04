@@ -99,7 +99,6 @@ int main(void)
 
     freeaddrinfo(servinfo);
 
-    queue<Packet*> sliding_window;
     // Used to get timestamps
     time_t timer;
 
@@ -122,9 +121,8 @@ int main(void)
         continue;
       }
 
+      queue<Packet*> sliding_window;
       int window_position = 0;
-      queue<Packet*> empty;
-      sliding_window.swap(empty);
 
       int packetsLeft = window.packets.size();
       int i = 0;
@@ -132,13 +130,6 @@ int main(void)
       // Loop while there are still files to be sent
       //while (packetsLeft != 0) {
       while(1) {
-        //printf("Begin outer while: %d\n", packetsLeft);
-        //size_t print =(int) sliding_window.size();
-        //printf("Sliding window size: %zu\n", print);
-
-        if (packetsLeft <= 0 && ((sliding_window.size() > SLIDINGWINDOWSIZE+1) || sliding_window.empty())) {
-          break;
-        }
 
         //printf("Queue has %d items \n", sliding_window.size());
         // While the queue has less than 5 elements in it
@@ -249,9 +240,9 @@ int main(void)
 
         }
 
-        //if(sliding_window.empty()) {
-          //break;
-        //} 
+        if(sliding_window.empty()) {
+          break;
+        } 
       }
 
       Packet *fin = new Packet();
