@@ -99,6 +99,7 @@ int main(void)
 
     freeaddrinfo(servinfo);
 
+    queue<Packet*> sliding_window;
     // Used to get timestamps
     time_t timer;
 
@@ -122,8 +123,9 @@ int main(void)
       }
 
       int window_position = 0;
+      queue<Packet*> empty;
+      sliding_window.swap(empty);
 
-      queue<Packet*> sliding_window;
       int packetsLeft = window.packets.size();
       int i = 0;
       
