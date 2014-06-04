@@ -237,6 +237,8 @@ int main(void)
       sendto(sockfd, fin, sizeof(Packet), 0,
           (struct sockaddr *)&their_addr, addr_len);
 
+      printf("Sent fin to client\n");
+
       printf("listener: got packet from %s\n",
           inet_ntop(their_addr.ss_family,
             get_in_addr((struct sockaddr *)&their_addr),
