@@ -213,6 +213,7 @@ int main(void)
 
             //pop queue for all ack numbers received in order
             int diff = ((ack_packet->header.getAckNum() - sliding_window.front()->header.getSeqNum()) / 1024);
+            int mod = ((ack_packet->header.getAckNum() - sliding_window.front()->header.getSeqNum()) % 1024);
 
             printf("Ack number is: %d\n", ack_packet->header.getAckNum());
 
@@ -221,6 +222,11 @@ int main(void)
               sliding_window.pop();
               window_position++; //new slot has opened up in the window
               diff--; //we need to pop the queue "diff" many times for multiple packet acks
+            }
+
+            if (mod != 0) {
+              sliding_window.pop();
+              window_position++;
             }
             
           }
