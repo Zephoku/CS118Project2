@@ -199,13 +199,13 @@ int main(void)
             recvfrom(sockfd, ack_packet, sizeof(Packet), 0 , NULL, 0); //code wont move on unless client recieved something. expecting an ack
 
             // Simulate Packet Loss
-            if (simulatePacketLoss(40)) {
+            if (simulatePacketLoss(0)) {
                 printf("Dropped ACK: %d (simulated). \n", ack_packet->header.getAckNum());
                 continue;
             }
 
             // Simulate Packet Corruption
-            if (simulatePacketCorruption(20)) {
+            if (simulatePacketCorruption(0)) {
                 printf("ACK corrupted: %d (simulated). \n", ack_packet->header.getAckNum());
                 // Send the ACK of the last received packet.
                 // sendACK(0, sockfd, p);
@@ -217,6 +217,9 @@ int main(void)
 
             //pop queue for all ack numbers received in order
             int diff = ((ack_packet->header.getAckNum() - sliding_window.front()->header.getSeqNum()) / 1024);
+            //printf("AckPacket: %d\n", ack_packet->header.getAckNum());
+            //printf("Diff: %d\n", diff);
+            //printf("Window seq num %d\n", sliding_window.front()->header.getSeqNum());
             int mod = ((ack_packet->header.getAckNum() - sliding_window.front()->header.getSeqNum()) % 1024);
 
             printf("Ack number is: %d\n", ack_packet->header.getAckNum());

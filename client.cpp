@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
         if (num_received == 0) {
 
             // Simulate Packet Loss
-            if (simulatePacketLoss(0)) {
+            if (simulatePacketLoss(80)) {
                 printf("Dropped packet: %d (simulated). \n", packet->header.getSeqNum());
                 continue;
             }
@@ -141,6 +141,9 @@ int main(int argc, char *argv[])
                 continue;
             }
 
+            if (packet->header.getSeqNum() > 1024) {
+              continue;
+            }
 
             window.packets.push_back(packet);
             last_ack_number = packet->header.getSeqNum();
