@@ -37,12 +37,14 @@ void *get_in_addr(struct sockaddr *sa)
 bool simulatePacketLoss(int prob)
 {
     int random_number = rand() % 100 + 1; //random number between 1 - 10;
+    //printf("Loss: %d\n", random_number);
 
     return (random_number <= prob);
 }
 
 bool simulatePacketCorruption(int prob) {
     int random_number = rand() % 100 + 1; //random number between 1 - 10;
+    //printf("Corrupt: %d\n", random_number);
 
     return (random_number <= prob);
 }
@@ -60,6 +62,8 @@ int main(void)
     char s[INET6_ADDRSTRLEN];
     fd_set readfds;
     struct timeval tv;
+
+    srand (time(NULL));
 
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC; // set to AF_INET to force IPv4
@@ -201,7 +205,7 @@ int main(void)
             }
 
             // Simulate Packet Corruption
-            if (simulatePacketCorruption(0)) {
+            if (simulatePacketCorruption(20)) {
                 printf("ACK corrupted: %d (simulated). \n", ack_packet->header.getAckNum());
                 // Send the ACK of the last received packet.
                 // sendACK(0, sockfd, p);
