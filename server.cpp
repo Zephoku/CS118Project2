@@ -175,7 +175,7 @@ int main(void)
             i = window_position;
 
             while (packetsLeft!= 0) {
-               window.packets[i]->header.setTimestamp(time(&timer));
+              window.packets[i]->header.setTimestamp(time(&timer));
 
               sliding_window.push(window.packets[i]);
 
@@ -194,7 +194,7 @@ int main(void)
             recvfrom(sockfd, ack_packet, sizeof(Packet), 0 , NULL, 0); //code wont move on unless client recieved something. expecting an ack
 
             // Simulate Packet Loss
-            if (simulatePacketLoss(0)) {
+            if (simulatePacketLoss(50)) {
                 printf("Dropped ACK (simulated). \n");
                 continue;
             }

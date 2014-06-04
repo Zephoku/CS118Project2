@@ -18,6 +18,7 @@
 
 #define SERVERPORT "4951"    // the port users will be connecting to
 // #define PROBABILITY 1 // 0.1 probability
+#define EXPIRY 1
 
 void sendACK(int ack_num, int sockfd, struct addrinfo *p) {
     Packet *ack_packet = new Packet();
@@ -28,13 +29,13 @@ void sendACK(int ack_num, int sockfd, struct addrinfo *p) {
 
 bool simulatePacketLoss(int prob)
 {
-    int random_number = rand() % 100 + 1; //random number between 1 - 10;
+    int random_number = rand() % 100 + 1; //random number between 1 - 100;
 
     return (random_number <= prob);
 }
 
 bool simulatePacketCorruption(int prob) {
-    int random_number = rand() % 100 + 1; //random number between 1 - 10;
+    int random_number = rand() % 100 + 1; //random number between 1 - 100;
 
     return (random_number <= prob);
 }
@@ -43,8 +44,11 @@ int main(int argc, char *argv[])
 {
     int sockfd;
     struct addrinfo hints, *servinfo, *p;
-    int rv;
+    int rv; int rv_timer;
     int numbytes;
+    int last_ack_number = 0;
+    fd_set readfds;
+    struct timeval tv;
 
     srand (time(NULL));
 
@@ -86,7 +90,30 @@ int main(int argc, char *argv[])
     Window window;
     int num_received = 0;
 
+    FD_ZERO(&readfds);
+    FD_SET(sockfd, &readfds);
+
     while(1) {
+
+
+        if(num_received != 0) 
+        {
+            tv.tv_sec = 1;
+            tv.tv_usec =  0;
+            rv_timer = select(sockfd + 1, &readfds, NULL, NULL, &tv);
+
+            if (rv_timer == -1) {
+               
+                perror("select"); // error occurred in select()
+
+            } else if (rv_timer == 0) {
+
+                printf("Timeout occured for ack %d\n", last_ack_number);
+                sendACK(last_ack_number, sockfd, p);
+                continue;
+            }
+        }
+
         //printf("Waiting to recieve\n");
         Packet *packet = new Packet();
         //printf("Size of packet: %d\n", sizeof(Packet));
@@ -99,22 +126,25 @@ int main(int argc, char *argv[])
         if (num_received == 0) {
 
             // Simulate Packet Loss
-            if (simulatePacketLoss(10)) {
+            if (simulatePacketLoss(0)) {
                 printf("Dropped packet (simulated). \n");
                 continue;
             }
 
             // Simulate Packet Corruption
-            if (simulatePacketCorruption(10)) {
+            if (simulatePacketCorruption(0)) {
                 printf("Packet corrupted (simulated). \n");
+                
                 // Send the ACK of the last received packet.
-                sendACK(0, sockfd, p);
+                last_ack_number = 0;
+                sendACK(last_ack_number, sockfd, p);
                 continue;
             }
 
 
             window.packets.push_back(packet);
-            sendACK(packet->header.getSeqNum(), sockfd, p);
+            last_ack_number = packet->header.getSeqNum();
+            sendACK(last_ack_number, sockfd, p);
             printf("Received First Packet.\n");
             num_received++;
 
@@ -127,16 +157,17 @@ int main(int argc, char *argv[])
             if (curr_packet_seq_num - prev_seq_num == curr_packet_size) {
 
                 // Simulate Packet Loss
-                if (simulatePacketLoss(10)) {
+                if (simulatePacketLoss(0)) {
                     printf("Dropped packet (simulated). \n");
                     continue;
                 }
 
                 // Simulate Packet Corruption
-                if (simulatePacketCorruption(10)) {
+                if (simulatePacketCorruption(0)) {
                     printf("Packet corrupted (simulated). \n");
 
                     // Send the ACK of the last received packet.
+                    last_ack_number = prev_seq_num;
                     sendACK(prev_seq_num, sockfd, p);
                     continue;
                 }
@@ -145,12 +176,14 @@ int main(int argc, char *argv[])
                 window.packets.push_back(packet);
                 printf("Received Packet in Order\n");
                 printf("Packet number is: %d\n", curr_packet_seq_num);
-                sendACK(packet->header.getSeqNum(), sockfd, p);
+                last_ack_number = packet->header.getSeqNum();
+                sendACK(last_ack_number, sockfd, p);
                 num_received++;
             } else {
                 // Else, drop the packet
                 printf("Received Packet out of order. Dropped. \n"); //Packet Loss, might have to fix this. 
                 // send ACK of last previously received packet (in order)
+                last_ack_number = prev_seq_num;
                 sendACK(prev_seq_num, sockfd, p);
             }
         }
