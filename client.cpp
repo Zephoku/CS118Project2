@@ -165,7 +165,7 @@ int main(int argc, char *argv[])
             if (curr_packet_seq_num - prev_seq_num == curr_packet_size) {
 
                 // Simulate Packet Loss
-                if (simulatePacketLoss(40)) {
+                if (simulatePacketLoss(70)) {
                     printf("Dropped packet: %d (simulated). \n", packet->header.getSeqNum());
                     delete packet;
                     continue;
