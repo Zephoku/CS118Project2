@@ -213,9 +213,10 @@ int main(void)
             //pop queue for all ack numbers received in order
             int diff = ((ack_packet->header.getAckNum() - sliding_window.front()->header.getSeqNum()) / 1024);
 
+            printf("Ack number is: %d\n", ack_packet->header.getAckNum());
+
             while (diff >= 0) {
-              printf("Ack number is: %d\n", ack_packet->header.getAckNum());
-              // ROBERT: The code gets a sementation fault between the above line and this. "dog" doesn't
+              // printf("diff: %d\n", diff);
               sliding_window.pop();
               window_position++; //new slot has opened up in the window
               diff--; //we need to pop the queue "diff" many times for multiple packet acks
