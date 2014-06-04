@@ -217,6 +217,9 @@ int main(void)
 
             //pop queue for all ack numbers received in order
             int diff = ((ack_packet->header.getAckNum() - sliding_window.front()->header.getSeqNum()) / 1024);
+            //printf("AckPacket: %d\n", ack_packet->header.getAckNum());
+            //printf("Diff: %d\n", diff);
+            //printf("Window seq num %d\n", sliding_window.front()->header.getSeqNum());
             int mod = ((ack_packet->header.getAckNum() - sliding_window.front()->header.getSeqNum()) % 1024);
 
             printf("Ack number is: %d\n", ack_packet->header.getAckNum());
