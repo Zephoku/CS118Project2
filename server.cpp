@@ -231,7 +231,7 @@ int main(void)
               diff--; //we need to pop the queue "diff" many times for multiple packet acks
             }
 
-            if (mod != 0) {
+            if (mod > 0) {
               sliding_window.pop();
               window_position++;
             }
