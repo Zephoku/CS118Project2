@@ -90,12 +90,12 @@ int main(int argc, char *argv[])
     Window window;
     int num_received = 0;
 
-    FD_ZERO(&readfds);
-    FD_SET(sockfd, &readfds);
 
     while(1) {
 
 
+    FD_ZERO(&readfds);
+    FD_SET(sockfd, &readfds);
         if(num_received != 0) 
         {
             tv.tv_sec = 1;
