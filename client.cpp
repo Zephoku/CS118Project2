@@ -128,9 +128,10 @@ int main(int argc, char *argv[])
         if (num_received == 0) {
 
             // Simulate Packet Loss
-            if (simulatePacketLoss(80)) {
+            if (simulatePacketLoss(0)) {
                 printf("Dropped packet: %d (simulated). \n", packet->header.getSeqNum());
                 flag = true;
+                delete packet;
                 continue;
             }
 
@@ -141,6 +142,7 @@ int main(int argc, char *argv[])
                 // Send the ACK of the last received packet.
                 last_ack_number = 0;
                 sendACK(last_ack_number, sockfd, p);
+                delete packet;
                 continue;
             }
 
@@ -163,8 +165,9 @@ int main(int argc, char *argv[])
             if (curr_packet_seq_num - prev_seq_num == curr_packet_size) {
 
                 // Simulate Packet Loss
-                if (simulatePacketLoss(60)) {
+                if (simulatePacketLoss(40)) {
                     printf("Dropped packet: %d (simulated). \n", packet->header.getSeqNum());
+                    delete packet;
                     continue;
                 }
 
@@ -175,6 +178,7 @@ int main(int argc, char *argv[])
                     // Send the ACK of the last received packet.
                     last_ack_number = prev_seq_num;
                     sendACK(prev_seq_num, sockfd, p);
+                    delete packet;
                     continue;
                 }
 
