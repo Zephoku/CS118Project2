@@ -174,7 +174,7 @@ int main(void)
 
             while(!sliding_window.empty()) {
               sliding_window.pop();
-              packetsLeft++; //HAHA DAVID: we missed this!
+              packetsLeft++; 
             }
 
             i = window_position;
@@ -199,13 +199,13 @@ int main(void)
             recvfrom(sockfd, ack_packet, sizeof(Packet), 0 , NULL, 0); //code wont move on unless client recieved something. expecting an ack
 
             // Simulate Packet Loss
-            if (simulatePacketLoss(40)) {
+            if (simulatePacketLoss(0)) {
                 printf("Dropped ACK: %d (simulated). \n", ack_packet->header.getAckNum());
                 continue;
             }
 
             // Simulate Packet Corruption
-            if (simulatePacketCorruption(20)) {
+            if (simulatePacketCorruption(0)) {
                 printf("ACK corrupted: %d (simulated). \n", ack_packet->header.getAckNum());
                 // Send the ACK of the last received packet.
                 // sendACK(0, sockfd, p);

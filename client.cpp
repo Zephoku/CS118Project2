@@ -89,6 +89,7 @@ int main(int argc, char *argv[])
 
     Window window;
     int num_received = 0;
+    bool flag = false;
 
 
     while(1) {
@@ -96,7 +97,8 @@ int main(int argc, char *argv[])
 
     FD_ZERO(&readfds);
     FD_SET(sockfd, &readfds);
-        if(num_received != 0) 
+
+        if(num_received != 0 && (FD_ISSET(sockfd, &readfds)) ) 
         {
             tv.tv_sec = 1;
             tv.tv_usec =  0;
@@ -128,6 +130,7 @@ int main(int argc, char *argv[])
             // Simulate Packet Loss
             if (simulatePacketLoss(0)) {
                 printf("Dropped packet: %d (simulated). \n", packet->header.getSeqNum());
+                flag = true;
                 continue;
             }
 
@@ -145,7 +148,7 @@ int main(int argc, char *argv[])
             window.packets.push_back(packet);
             last_ack_number = packet->header.getSeqNum();
             sendACK(last_ack_number, sockfd, p);
-            printf("Received First Packet.\n");
+            printf("Received First Packet:%d\n", last_ack_number);
             num_received++;
 
         } else {
@@ -157,7 +160,7 @@ int main(int argc, char *argv[])
             if (curr_packet_seq_num - prev_seq_num == curr_packet_size) {
 
                 // Simulate Packet Loss
-                if (simulatePacketLoss(0)) {
+                if (simulatePacketLoss(60)) {
                     printf("Dropped packet: %d (simulated). \n", packet->header.getSeqNum());
                     continue;
                 }
