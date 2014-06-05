@@ -49,7 +49,7 @@ bool simulatePacketCorruption(int prob) {
     return (random_number <= prob);
 }
 
-int main(void)
+int main(int argc, char *argv[])
 {
 
     int sockfd;
@@ -64,6 +64,22 @@ int main(void)
     struct timeval tv;
 
     srand (time(NULL));
+
+    if (argc != 3) {
+      fprintf(stderr,"usage: ./server prob_loss prob_corruption\n");
+      exit(1);
+    }
+
+    int prob_loss = atoi(argv[1]);
+    int prob_corruption = atoi(argv[2]);
+
+    if (prob_loss > 100 || prob_loss < 0 || prob_corruption > 100 || prob_corruption < 0) {
+        fprintf(stderr,"probabilities need to be between 0 and 100\n");
+        exit(1);
+    }
+
+    // printf("%d", prob_loss);
+    // printf("%d", prob_corruption);
 
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC; // set to AF_INET to force IPv4
@@ -142,7 +158,7 @@ int main(void)
 
           sliding_window.push(window.packets[i]);
 
-          printf("Sent seq: %d at %d\n", window.packets[i]->header.getSeqNum(), i);
+          // printf("Sent seq: %d at %d\n", window.packets[i]->header.getSeqNum(), i);
           sendto(sockfd, window.packets[i], sizeof(Packet), 0,
             (struct sockaddr *)&their_addr, addr_len);
 
@@ -184,7 +200,7 @@ int main(void)
 
               sliding_window.push(window.packets[i]);
 
-              printf("Sent seq: %d at %d\n", window.packets[i]->header.getSeqNum(), i);
+              // printf("Sent seq: %d at %d\n", window.packets[i]->header.getSeqNum(), i);
               sendto(sockfd, window.packets[i], sizeof(Packet), 0,
               (struct sockaddr *)&their_addr, addr_len);
 
@@ -200,14 +216,14 @@ int main(void)
             recvfrom(sockfd, ack_packet, sizeof(Packet), 0 , NULL, 0); //code wont move on unless client recieved something. expecting an ack
 
             // Simulate Packet Loss
-            if (simulatePacketLoss(40)) {
+            if (simulatePacketLoss(prob_loss)) {
                 printf("Dropped ACK: %d (simulated). \n", ack_packet->header.getAckNum());
                 delete ack_packet;
                 continue;
             }
 
             // Simulate Packet Corruption
-            if (simulatePacketCorruption(40)) {
+            if (simulatePacketCorruption(prob_corruption)) {
                 printf("ACK corrupted: %d (simulated). \n", ack_packet->header.getAckNum());
                 delete ack_packet;
                 // Send the ACK of the last received packet.

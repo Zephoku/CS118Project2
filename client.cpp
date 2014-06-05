@@ -52,10 +52,22 @@ int main(int argc, char *argv[])
 
     srand (time(NULL));
 
-    if (argc != 3) {
-        fprintf(stderr,"usage: talker hostname filename\n");
+    if (argc != 5) {
+        fprintf(stderr,"usage: ./client hostname filename prob_loss prob_corruption\n");
         exit(1);
     }
+
+    // Set prob_loss and prob_corruption as variables
+    int prob_loss = atoi(argv[3]);
+    int prob_corruption = atoi(argv[4]);
+
+    if (prob_loss > 100 || prob_loss < 0 || prob_corruption > 100 || prob_corruption < 0) {
+        fprintf(stderr,"probabilities need to be between 0 and 100\n");
+        exit(1);
+    }
+
+    // printf("%d", prob_loss);
+    // printf("%d", prob_corruption);
 
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC;
@@ -128,7 +140,7 @@ int main(int argc, char *argv[])
         if (num_received == 0) {
 
             // Simulate Packet Loss
-            if (simulatePacketLoss(40)) {
+            if (simulatePacketLoss(prob_loss)) {
                 printf("Dropped packet: %d (simulated). \n", packet->header.getSeqNum());
                 flag = true;
                 delete packet;
@@ -136,7 +148,7 @@ int main(int argc, char *argv[])
             }
 
             // Simulate Packet Corruption
-            if (simulatePacketCorruption(40)) {
+            if (simulatePacketCorruption(prob_corruption)) {
                 printf("Packet corrupted: %d (simulated). \n", packet->header.getSeqNum());
                 
                 // Send the ACK of the last received packet.
@@ -165,14 +177,14 @@ int main(int argc, char *argv[])
             if (curr_packet_seq_num - prev_seq_num == curr_packet_size) {
 
                 // Simulate Packet Loss
-                if (simulatePacketLoss(40)) {
+                if (simulatePacketLoss(prob_loss)) {
                     printf("Dropped packet: %d (simulated). \n", packet->header.getSeqNum());
                     delete packet;
                     continue;
                 }
 
                 // Simulate Packet Corruption
-                if (simulatePacketCorruption(40)) {
+                if (simulatePacketCorruption(prob_corruption)) {
                     printf("Packet corrupted: %d (simulated). \n", packet->header.getSeqNum());
 
 
