@@ -172,11 +172,12 @@ int main(int argc, char *argv[])
                 }
 
                 // Simulate Packet Corruption
-                if (simulatePacketCorruption(0)) {
+                if (simulatePacketCorruption(40)) {
                     printf("Packet corrupted: %d (simulated). \n", packet->header.getSeqNum());
 
                     // Send the ACK of the last received packet.
                     last_ack_number = prev_seq_num;
+                    printf("PrevSeqNum: %d\n", last_ack_number);
                     sendACK(prev_seq_num, sockfd, p);
                     delete packet;
                     continue;

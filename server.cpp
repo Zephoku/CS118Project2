@@ -22,7 +22,7 @@
 
 #define MAXBUFLEN 100
 #define SLIDINGWINDOWSIZE 5
-#define EXPIRY 1
+#define EXPIRY .05
 
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
@@ -154,7 +154,6 @@ int main(void)
         FD_SET(sockfd, &readfds);
 
         // Check for a timeout
-        double diff = difftime( (time(&timer)), sliding_window.front()->header.getTimestamp() ); 
         double timediff = 0;
 
         if(timediff < EXPIRY) {
@@ -179,7 +178,7 @@ int main(void)
 
             i = window_position;
 
-            while (packetsLeft!= 0) {
+            while ((packetsLeft!= 0) && (sliding_window.size() < SLIDINGWINDOWSIZE)) {
               window.packets[i]->header.setTimestamp(time(&timer));
 
               sliding_window.push(window.packets[i]);
@@ -215,27 +214,17 @@ int main(void)
                 continue;
             }
 
-            //pop queue for all ack numbers received in order
-            int diff = ((ack_packet->header.getAckNum() - sliding_window.front()->header.getSeqNum()) / 1024);
-            //printf("AckPacket: %d\n", ack_packet->header.getAckNum());
-            //printf("Diff: %d\n", diff);
-            //printf("Window seq num %d\n", sliding_window.front()->header.getSeqNum());
-            int mod = ((ack_packet->header.getAckNum() - sliding_window.front()->header.getSeqNum()) % 1024);
-
             printf("Ack number is: %d\n", ack_packet->header.getAckNum());
-
-            while (diff >= 0) {
-              // printf("diff: %d\n", diff);
+            //printf("Seq number is: %d\n", sliding_window.front()->header.getSeqNum());
+            //pop queue for all ack numbers received in order
+            while ( ! sliding_window.empty() && 
+                  (ack_packet->header.getAckNum() >= 
+                   sliding_window.front()->header.getSeqNum()))
+            {
               sliding_window.pop();
               window_position++; //new slot has opened up in the window
-              diff--; //we need to pop the queue "diff" many times for multiple packet acks
             }
 
-            if (mod > 0) {
-              sliding_window.pop();
-              window_position++;
-            }
-            
           }
 
         }
