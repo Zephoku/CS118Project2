@@ -142,6 +142,7 @@ int main(void)
 
           sliding_window.push(window.packets[i]);
 
+          printf("Sent seq: %d at %d\n", window.packets[i]->header.getSeqNum(), i);
           sendto(sockfd, window.packets[i], sizeof(Packet), 0,
             (struct sockaddr *)&their_addr, addr_len);
 
@@ -183,6 +184,7 @@ int main(void)
 
               sliding_window.push(window.packets[i]);
 
+              printf("Sent seq: %d at %d\n", window.packets[i]->header.getSeqNum(), i);
               sendto(sockfd, window.packets[i], sizeof(Packet), 0,
               (struct sockaddr *)&their_addr, addr_len);
 
@@ -198,7 +200,7 @@ int main(void)
             recvfrom(sockfd, ack_packet, sizeof(Packet), 0 , NULL, 0); //code wont move on unless client recieved something. expecting an ack
 
             // Simulate Packet Loss
-            if (simulatePacketLoss(0)) {
+            if (simulatePacketLoss(40)) {
                 printf("Dropped ACK: %d (simulated). \n", ack_packet->header.getAckNum());
                 delete ack_packet;
                 continue;
@@ -217,7 +219,7 @@ int main(void)
             }
 
             printf("Ack number is: %d\n", ack_packet->header.getAckNum());
-            //printf("Seq number is: %d\n", sliding_window.front()->header.getSeqNum());
+            printf("Seq number is: %d\n", sliding_window.front()->header.getSeqNum());
             //pop queue for all ack numbers received in order
             while ( ! sliding_window.empty() && 
                   (ack_packet->header.getAckNum() >= 
@@ -231,7 +233,7 @@ int main(void)
 
         }
 
-        if(sliding_window.empty()) {
+        if(sliding_window.empty() && packetsLeft <= 0) {
           break;
         } 
       }

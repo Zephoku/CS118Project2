@@ -28,9 +28,9 @@ int Window::disassemble(string filename) {
 
   packet = new Packet();
 
-  while( ! feof(file)) {
-    buf = fgetc(file);
+  buf = fgetc(file);
 
+  while( ! feof(file)) {
     packet->data[packetSize] = buf;
     packetSize++;
 
@@ -48,6 +48,8 @@ int Window::disassemble(string filename) {
       packetSize = 0;
       curSeqNum++;
     }
+
+    buf = fgetc(file);
   }
 
   // Create leftover packet

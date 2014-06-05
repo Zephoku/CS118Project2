@@ -128,7 +128,7 @@ int main(int argc, char *argv[])
         if (num_received == 0) {
 
             // Simulate Packet Loss
-            if (simulatePacketLoss(0)) {
+            if (simulatePacketLoss(40)) {
                 printf("Dropped packet: %d (simulated). \n", packet->header.getSeqNum());
                 flag = true;
                 delete packet;
@@ -136,7 +136,7 @@ int main(int argc, char *argv[])
             }
 
             // Simulate Packet Corruption
-            if (simulatePacketCorruption(0)) {
+            if (simulatePacketCorruption(40)) {
                 printf("Packet corrupted: %d (simulated). \n", packet->header.getSeqNum());
                 
                 // Send the ACK of the last received packet.
@@ -165,7 +165,7 @@ int main(int argc, char *argv[])
             if (curr_packet_seq_num - prev_seq_num == curr_packet_size) {
 
                 // Simulate Packet Loss
-                if (simulatePacketLoss(0)) {
+                if (simulatePacketLoss(40)) {
                     printf("Dropped packet: %d (simulated). \n", packet->header.getSeqNum());
                     delete packet;
                     continue;
@@ -175,15 +175,17 @@ int main(int argc, char *argv[])
                 if (simulatePacketCorruption(40)) {
                     printf("Packet corrupted: %d (simulated). \n", packet->header.getSeqNum());
 
+
                     // Send the ACK of the last received packet.
                     last_ack_number = prev_seq_num;
-                    printf("PrevSeqNum: %d\n", last_ack_number);
+                    //printf("PrevSeqNum: %d\n", last_ack_number);
                     sendACK(prev_seq_num, sockfd, p);
                     delete packet;
                     continue;
                 }
 
                 // Packets in order
+                //printf("window.packetsize: %zu\n", window.packets.size());
                 window.packets.push_back(packet);
                 printf("Received Packet in Order\n");
                 printf("Packet number is: %d\n", curr_packet_seq_num);
