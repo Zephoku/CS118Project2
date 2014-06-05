@@ -268,23 +268,23 @@ int main(int argc, char *argv[])
 
       printf("Sent FIN Packet\n");
 
-      Packet *finack_packet = new Packet();
-      recvfrom(sockfd, finack_packet, sizeof(Packet), 0 , NULL, 0);
 
-      if (finack_packet->header.getFin() == 1) 
-      {
+      while(1) {
+        Packet *finack_packet = new Packet();
+        recvfrom(sockfd, finack_packet, sizeof(Packet), 0 , NULL, 0);
+        if (finack_packet->header.getFin() == 1) {
       
-        printf("Received FIN-ACK Packet\n");
+          printf("Received FIN-ACK Packet\n");
 
-        //Send last-ack
+          Packet *last_ack_packet = new Packet();
+          last_ack_packet->header.setFin(1);
+          sendto(sockfd, last_ack_packet, sizeof(Packet), 0,
+              (struct sockaddr *)&their_addr, addr_len);
 
-        Packet *last_ack_packet = new Packet();
-        last_ack_packet->header.setFin(1);
-        sendto(sockfd, last_ack_packet, sizeof(Packet), 0,
-          (struct sockaddr *)&their_addr, addr_len);
-
-        printf("Sent LAST-ACK Packet\n");
-
+          printf("Sent LAST-ACK Packet\n");
+          delete finack_packet;
+          break;
+        }
       }
 
 
@@ -301,4 +301,4 @@ int main(int argc, char *argv[])
 
 
     return 0;
-}
+    }
