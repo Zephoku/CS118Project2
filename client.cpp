@@ -134,8 +134,30 @@ int main(int argc, char *argv[])
         //printf("Size of packet: %d\n", sizeof(Packet));
         recvfrom(sockfd, packet, sizeof(Packet), 0 , NULL, 0);
         if (packet->header.getFin() == 1) {
-          printf("Recieved FIN Packet\n");
-            break;
+          printf("Received FIN Packet\n");
+          
+
+          Packet *finack_packet = new Packet();
+          finack_packet->header.setFin(1);
+
+          sendto(sockfd, finack_packet, sizeof(Packet), 0,
+           p->ai_addr, p->ai_addrlen);
+
+          printf("Sent FIN-ACK Packet\n");
+
+          Packet *last_ack_packet = new Packet();
+          recvfrom(sockfd, last_ack_packet, sizeof(Packet), 0 , NULL, 0);
+          
+          if (last_ack_packet->header.getFin() == 1) {
+              printf("Received LAST-ACK Packet\n");
+
+              delete packet;
+              delete last_ack_packet;
+
+              break;
+          }
+
+            
         }
         // Check to see if packet is received in order
         // If in order, push back into window
@@ -221,7 +243,7 @@ int main(int argc, char *argv[])
 
     freeaddrinfo(servinfo);
 
-    printf("talker: sent %d bytes to %s\n", numbytes, argv[1]);
+    printf("talker: Successfully received file from %s\n", argv[1]);
     close(sockfd);
 
     return 0;
