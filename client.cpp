@@ -52,14 +52,14 @@ int main(int argc, char *argv[])
 
     srand (time(NULL));
 
-    if (argc != 5) {
-        fprintf(stderr,"usage: ./client hostname filename prob_loss prob_corruption\n");
+    if (argc != 6) {
+        fprintf(stderr,"usage: ./client hostname port_number filename prob_loss prob_corruption\n");
         exit(1);
     }
 
-    // Set prob_loss and prob_corruption as variables
-    int prob_loss = atoi(argv[3]);
-    int prob_corruption = atoi(argv[4]);
+    // Set arguments as variables
+    int prob_loss = atoi(argv[4]);
+    int prob_corruption = atoi(argv[5]);
 
     if (prob_loss > 100 || prob_loss < 0 || prob_corruption > 100 || prob_corruption < 0) {
         fprintf(stderr,"probabilities need to be between 0 and 100\n");
@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_DGRAM;
 
-    if ((rv = getaddrinfo(argv[1], SERVERPORT, &hints, &servinfo)) != 0) {
+    if ((rv = getaddrinfo(argv[1], argv[2], &hints, &servinfo)) != 0) {
         fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
         return 1;
     }
@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
         return 2;
     }
 
-    if ((numbytes = sendto(sockfd, argv[2], strlen(argv[2]), 0,
+    if ((numbytes = sendto(sockfd, argv[3], strlen(argv[3]), 0,
              p->ai_addr, p->ai_addrlen)) == -1) {
         perror("talker: sendto");
         exit(1);
@@ -214,7 +214,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    window.assemble(argv[2]);
+    window.assemble(argv[3]);
 
     freeaddrinfo(servinfo);
 

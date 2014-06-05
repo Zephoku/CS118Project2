@@ -65,13 +65,13 @@ int main(int argc, char *argv[])
 
     srand (time(NULL));
 
-    if (argc != 3) {
-      fprintf(stderr,"usage: ./server prob_loss prob_corruption\n");
+    if (argc != 4) {
+      fprintf(stderr,"usage: ./server port_number prob_loss prob_corruption\n");
       exit(1);
     }
 
-    int prob_loss = atoi(argv[1]);
-    int prob_corruption = atoi(argv[2]);
+    int prob_loss = atoi(argv[2]);
+    int prob_corruption = atoi(argv[3]);
 
     if (prob_loss > 100 || prob_loss < 0 || prob_corruption > 100 || prob_corruption < 0) {
         fprintf(stderr,"probabilities need to be between 0 and 100\n");
@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
     hints.ai_socktype = SOCK_DGRAM;
     hints.ai_flags = AI_PASSIVE; // use my IP
 
-    if ((rv = getaddrinfo(NULL, MYPORT, &hints, &servinfo)) != 0) {
+    if ((rv = getaddrinfo(NULL, argv[1], &hints, &servinfo)) != 0) {
       fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
       return 1;
     }
