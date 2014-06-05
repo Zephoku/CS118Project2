@@ -65,21 +65,28 @@ int main(int argc, char *argv[])
 
     srand (time(NULL));
 
-    if (argc != 4) {
-      fprintf(stderr,"usage: ./server port_number prob_loss prob_corruption\n");
+    if (argc != 5) {
+      fprintf(stderr,"usage: ./server port_number congestion_window_size prob_loss prob_corruption\n");
       exit(1);
     }
 
-    int prob_loss = atoi(argv[2]);
-    int prob_corruption = atoi(argv[3]);
+    int sliding_window_size = atoi(argv[2]);
+    int prob_loss = atoi(argv[3]);
+    int prob_corruption = atoi(argv[4]);
 
     if (prob_loss > 100 || prob_loss < 0 || prob_corruption > 100 || prob_corruption < 0) {
         fprintf(stderr,"probabilities need to be between 0 and 100\n");
         exit(1);
     }
 
+    if (sliding_window_size < 1) {
+      fprintf(stderr,"congestion_window_size must be greater or equal to 1\n");
+      exit(1);
+    }
+
     // printf("%d", prob_loss);
     // printf("%d", prob_corruption);
+    // printf("%d", sliding_window_size);
 
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC; // set to AF_INET to force IPv4
@@ -150,7 +157,7 @@ int main(int argc, char *argv[])
         //printf("Queue has %d items \n", sliding_window.size());
         // While the queue has less than 5 elements in it
 
-        while ((packetsLeft!= 0) && (sliding_window.size() < SLIDINGWINDOWSIZE)) {
+        while ((packetsLeft!= 0) && (sliding_window.size() < sliding_window_size)) {
 
           //printf("Entered loop for the %d'th time\n", i);
           // Set the timer
@@ -195,7 +202,7 @@ int main(int argc, char *argv[])
 
             i = window_position;
 
-            while ((packetsLeft!= 0) && (sliding_window.size() < SLIDINGWINDOWSIZE)) {
+            while ((packetsLeft!= 0) && (sliding_window.size() < sliding_window_size)) {
               window.packets[i]->header.setTimestamp(time(&timer));
 
               sliding_window.push(window.packets[i]);
