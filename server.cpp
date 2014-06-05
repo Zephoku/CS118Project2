@@ -200,12 +200,14 @@ int main(void)
             // Simulate Packet Loss
             if (simulatePacketLoss(0)) {
                 printf("Dropped ACK: %d (simulated). \n", ack_packet->header.getAckNum());
+                delete ack_packet;
                 continue;
             }
 
             // Simulate Packet Corruption
-            if (simulatePacketCorruption(0)) {
+            if (simulatePacketCorruption(40)) {
                 printf("ACK corrupted: %d (simulated). \n", ack_packet->header.getAckNum());
+                delete ack_packet;
                 // Send the ACK of the last received packet.
                 // sendACK(0, sockfd, p);
 
