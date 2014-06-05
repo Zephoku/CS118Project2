@@ -165,7 +165,7 @@ int main(int argc, char *argv[])
 
           sliding_window.push(window.packets[i]);
 
-          // printf("Sent seq: %d at %d\n", window.packets[i]->header.getSeqNum(), i);
+           printf("Sent Packet: %d\n", window.packets[i]->header.getSeqNum());
           sendto(sockfd, window.packets[i], sizeof(Packet), 0,
             (struct sockaddr *)&their_addr, addr_len);
 
@@ -193,7 +193,7 @@ int main(int argc, char *argv[])
         if (rv_timer == -1) {
             perror("select"); // error occurred in select()
         } else if (rv_timer == 0) {
-            printf("Timeout occurred!  No data after %f seconds.\n", timediff);
+            printf("Timeout occurred!  No data after %f seconds\n", timediff);
 
             while(!sliding_window.empty()) {
               sliding_window.pop();
@@ -207,7 +207,7 @@ int main(int argc, char *argv[])
 
               sliding_window.push(window.packets[i]);
 
-              // printf("Sent seq: %d at %d\n", window.packets[i]->header.getSeqNum(), i);
+              printf("Sent Packet: %d\n", window.packets[i]->header.getSeqNum());
               sendto(sockfd, window.packets[i], sizeof(Packet), 0,
               (struct sockaddr *)&their_addr, addr_len);
 
@@ -224,14 +224,14 @@ int main(int argc, char *argv[])
 
             // Simulate Packet Loss
             if (simulatePacketLoss(prob_loss)) {
-                printf("Dropped ACK: %d (simulated). \n", ack_packet->header.getAckNum());
+                printf("Dropped ACK: %d (simulated) \n", ack_packet->header.getAckNum());
                 delete ack_packet;
                 continue;
             }
 
             // Simulate Packet Corruption
             if (simulatePacketCorruption(prob_corruption)) {
-                printf("ACK corrupted: %d (simulated). \n", ack_packet->header.getAckNum());
+                printf("Corrupted ACK: %d (simulated) \n", ack_packet->header.getAckNum());
                 delete ack_packet;
                 // Send the ACK of the last received packet.
                 // sendACK(0, sockfd, p);
@@ -241,8 +241,8 @@ int main(int argc, char *argv[])
                 continue;
             }
 
-            printf("Ack number is: %d\n", ack_packet->header.getAckNum());
-            printf("Seq number is: %d\n", sliding_window.front()->header.getSeqNum());
+            printf("Recieved ACK: %d\n", ack_packet->header.getAckNum());
+            //printf("Seq number is: %d\n", sliding_window.front()->header.getSeqNum());
             //pop queue for all ack numbers received in order
             while ( ! sliding_window.empty() && 
                   (ack_packet->header.getAckNum() >= 
@@ -266,7 +266,7 @@ int main(int argc, char *argv[])
       sendto(sockfd, fin, sizeof(Packet), 0,
           (struct sockaddr *)&their_addr, addr_len);
 
-      printf("Sent fin to client\n");
+      printf("Sent FIN Packet\n");
 
       printf("listener: got packet from %s\n",
           inet_ntop(their_addr.ss_family,
