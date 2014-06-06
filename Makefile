@@ -1,7 +1,7 @@
 CC=g++
 CFLAGS=-c -Wall
 LDFLAGS=
-SOURCES= Window.cpp Header.cpp 
+SOURCES= Window.cpp header.cpp 
 
 all: server client
 	
