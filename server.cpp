@@ -22,7 +22,7 @@
 
 #define MAXBUFLEN 100
 #define SLIDINGWINDOWSIZE 5
-#define EXPIRY .05
+#define EXPIRY 1
 
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
